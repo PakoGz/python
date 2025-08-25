@@ -91,3 +91,4 @@ def main():
             out.write(linea + "\n")
 
 main()
+# IVA_COMISION_ADHERENTE tiene mas de 20 caracteres y se sale del formato
