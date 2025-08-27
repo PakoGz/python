@@ -12,7 +12,6 @@ def parsear_linea_txt(linea):
     return {
         "ente": linea[0:3].strip(),
         "denominacion": linea[3:23].strip(),
-        "tipo_adherido": linea[23].strip(),
         "cantidad": int(linea[23:29]),
         "bruto": int(linea[29:47]),
         "signo_ajuste": linea[47],
@@ -57,33 +56,43 @@ def generar_lineas_salida(registro_txt, registro_csv):
             linea = (
                 f"{registro_txt['ente'].zfill(3)}"                         # 01–03
                 f"{registro_txt['denominacion']:<20}"                      # 04–23
-                f"{registro_txt['tipo_adherido']}"                          # 24
+                f"{registro_txt['adherido']}"                             # 24
                 f"{registro_csv['sucursal'].zfill(3)}"                     # 25–27
                 f"{registro_csv['cuenta'].zfill(11)}"                      # 28–38
-                f"{concepto:<20}"                                          # 39–58
+                f"{concepto:<20.20}"                                          # 39–58
                 f"{signo}"                                                  # 59
                 f"{str(valor).zfill(16)}"                                   # 60–75
             )
             lineas.append(linea)
     return lineas
 
+log_filename = f"entes_{datetime.now().strftime('%Y-%m-%d')}.log"
+
+def log_no_encontrado(ente_id):
+    with open(log_filename, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.now().isoformat()} - Ente {ente_id} no encontrado en CSV\n")
+
 def main():
     fecha = datetime.now().strftime("%m%d")
     nombre_salida = f"OUTPUT{fecha}.txt"
-
+    nombre_entrada = f"INPUIT{fecha}.txt"
     entes_csv = leer_csv("convenios.csv")
     datos_salida = []
 
-    with open("INPUT0822.txt", "r", encoding="utf-8") as f:
+    with open(nombre_entrada, "r", encoding="utf-8") as f:
         for linea in f:
             registro_txt = parsear_linea_txt(linea)
-
+            encontrado = False
             # Buscar coincidencia en CSV
             for registro_csv in entes_csv:
                 if registro_csv["ente_id"].strip() == registro_txt["ente"]:
                     lineas = generar_lineas_salida(registro_txt, registro_csv)
                     datos_salida.extend(lineas)
-          
+                    encontrado = True\
+                    
+            if not encontrado:
+                log_no_encontrado(registro_txt["ente"])
+                
 
     # Guardar archivo de salida
     with open(nombre_salida, "w", encoding="utf-8") as out:
@@ -91,4 +100,3 @@ def main():
             out.write(linea + "\n")
 
 main()
-# IVA_COMISION_ADHERENTE tiene mas de 20 caracteres y se sale del formato
